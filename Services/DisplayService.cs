@@ -77,7 +77,8 @@ public class DisplayService
     }
 
     /// <summary>
-    /// Returns friendly display names for all currently active monitors.
+    /// Returns a description for each active monitor including name, resolution, refresh rate,
+    /// and whether it is the primary display.
     /// </summary>
     public List<string> GetDisplaySummaries()
     {
@@ -85,13 +86,15 @@ public class DisplayService
         try
         {
             uint flags = CcdNative.QDC_ONLY_ACTIVE_PATHS;
-            var (_, _, pathCount, _) = QueryConfigRaw(flags);
+            var (pathBytes, modeBytes, pathCount, modeCount) = QueryConfigRaw(flags);
             if (pathCount == 0) return summaries;
 
-            var paths = QueryConfigPaths(flags, pathCount);
+            var paths = ParseStructArray<CcdNative.DISPLAYCONFIG_PATH_INFO>(pathBytes, pathCount);
+            var modes = ParseStructArray<CcdNative.DISPLAYCONFIG_MODE_INFO>(modeBytes, modeCount);
 
             foreach (var path in paths)
             {
+                // Friendly monitor name
                 var nameInfo = new CcdNative.DISPLAYCONFIG_TARGET_DEVICE_NAME
                 {
                     header = new CcdNative.DISPLAYCONFIG_DEVICE_INFO_HEADER
@@ -102,12 +105,42 @@ public class DisplayService
                         id = path.targetInfo.id
                     }
                 };
+                CcdNative.DisplayConfigGetDeviceInfo(ref nameInfo);
+                string name = !string.IsNullOrWhiteSpace(nameInfo.monitorFriendlyDeviceName)
+                    ? nameInfo.monitorFriendlyDeviceName
+                    : $"Display {summaries.Count + 1}";
 
-                int result = CcdNative.DisplayConfigGetDeviceInfo(ref nameInfo);
-                if (result == CcdNative.ERROR_SUCCESS && !string.IsNullOrWhiteSpace(nameInfo.monitorFriendlyDeviceName))
-                    summaries.Add(nameInfo.monitorFriendlyDeviceName);
-                else
-                    summaries.Add($"Display {summaries.Count + 1}");
+                // Resolution and primary status from source mode
+                string resolution = "";
+                bool isPrimary = false;
+                uint srcIdx = path.sourceInfo.modeInfoIdx;
+                if (srcIdx != 0xFFFFFFFF && srcIdx < modes.Length)
+                {
+                    var src = modes[srcIdx].sourceMode;
+                    resolution = $"{src.width}×{src.height}";
+                    isPrimary = src.position.x == 0 && src.position.y == 0;
+                }
+
+                // Refresh rate from target mode
+                string refresh = "";
+                uint tgtIdx = path.targetInfo.modeInfoIdx;
+                if (tgtIdx != 0xFFFFFFFF && tgtIdx < modes.Length)
+                {
+                    var freq = modes[tgtIdx].targetMode.targetVideoSignalInfo.vSyncFreq;
+                    if (freq.Denominator > 0)
+                    {
+                        int hz = (int)Math.Round((double)freq.Numerator / freq.Denominator);
+                        refresh = $"@ {hz}Hz";
+                    }
+                }
+
+                var parts = new List<string> { name };
+                if (!string.IsNullOrEmpty(resolution)) parts.Add(resolution);
+                if (!string.IsNullOrEmpty(refresh)) parts.Add(refresh);
+
+                string summary = string.Join(" — ", parts);
+                if (isPrimary) summary += " [Primary]";
+                summaries.Add(summary);
             }
         }
         catch
@@ -181,28 +214,23 @@ public class DisplayService
         }
     }
 
-    /// <summary>
-    /// Returns the path array as typed structs (for inspecting target IDs).
-    /// </summary>
-    private static CcdNative.DISPLAYCONFIG_PATH_INFO[] QueryConfigPaths(uint flags, int expectedCount)
+    private static T[] ParseStructArray<T>(byte[] bytes, int count) where T : struct
     {
-        int pathSize = Marshal.SizeOf<CcdNative.DISPLAYCONFIG_PATH_INFO>();
-        var (pathBytes, _, pathCount, _) = QueryConfigRaw(flags);
-
-        var paths = new CcdNative.DISPLAYCONFIG_PATH_INFO[pathCount];
-        IntPtr tmp = Marshal.AllocHGlobal(pathSize);
+        int size = Marshal.SizeOf<T>();
+        var result = new T[count];
+        IntPtr tmp = Marshal.AllocHGlobal(size);
         try
         {
-            for (int i = 0; i < pathCount; i++)
+            for (int i = 0; i < count; i++)
             {
-                Marshal.Copy(pathBytes, i * pathSize, tmp, pathSize);
-                paths[i] = Marshal.PtrToStructure<CcdNative.DISPLAYCONFIG_PATH_INFO>(tmp)!;
+                Marshal.Copy(bytes, i * size, tmp, size);
+                result[i] = Marshal.PtrToStructure<T>(tmp)!;
             }
         }
         finally
         {
             Marshal.FreeHGlobal(tmp);
         }
-        return paths;
+        return result;
     }
 }

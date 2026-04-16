@@ -1,20 +1,32 @@
-$publishDir = Join-Path $PSScriptRoot "publish"
+$runtimes = @("win-x64", "win-x86")
+$failed = @()
 
-Write-Host "Publishing VirtuaSwitcher..." -ForegroundColor Cyan
+foreach ($rid in $runtimes) {
+    $publishDir = Join-Path $PSScriptRoot "publish\$rid"
 
-dotnet publish "$PSScriptRoot\VirtuaSwitcher.csproj" `
-    -c Release `
-    -r win-x64 `
-    --self-contained true `
-    -p:PublishSingleFile=true `
-    -p:IncludeNativeLibrariesForSelfExtract=true `
-    -o $publishDir
+    Write-Host "Publishing $rid..." -ForegroundColor Cyan
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Publish failed." -ForegroundColor Red
-    exit 1
+    dotnet publish "$PSScriptRoot\VirtuaSwitcher.csproj" `
+        -c Release `
+        -r $rid `
+        --self-contained true `
+        -p:PublishSingleFile=true `
+        -p:IncludeNativeLibrariesForSelfExtract=true `
+        -o $publishDir
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  Failed." -ForegroundColor Red
+        $failed += $rid
+    } else {
+        Write-Host "  -> $publishDir\VirtuaSwitcher.exe" -ForegroundColor Green
+    }
+
+    Write-Host ""
 }
 
-Write-Host ""
-Write-Host "Published to: $publishDir" -ForegroundColor Green
-Write-Host "Executable:   $publishDir\VirtuaSwitcher.exe" -ForegroundColor Green
+if ($failed.Count -gt 0) {
+    Write-Host "Failed builds: $($failed -join ', ')" -ForegroundColor Red
+    exit 1
+} else {
+    Write-Host "All builds succeeded." -ForegroundColor Green
+}
