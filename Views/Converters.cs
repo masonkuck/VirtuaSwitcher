@@ -49,6 +49,17 @@ public class InverseBoolToVisibilityConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
+/// <summary>Non-null → True, null → False (for IsEnabled)</summary>
+[ValueConversion(typeof(object), typeof(bool))]
+public class NotNullToBoolConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is not null;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
 /// <summary>HotkeyBinding → display string (null → empty)</summary>
 [ValueConversion(typeof(HotkeyBinding), typeof(string))]
 public class HotkeyToStringConverter : IValueConverter

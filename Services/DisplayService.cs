@@ -40,28 +40,36 @@ public class DisplayService
         int modeSize = Marshal.SizeOf<CcdNative.DISPLAYCONFIG_MODE_INFO>();
 
         byte[] combined = Convert.FromBase64String(preset.TopologyBlob);
-        int pathBytes = preset.PathCount * pathSize;
-        int modeBytes = preset.ModeCount * modeSize;
+        int pathByteCount = preset.PathCount * pathSize;
+        int modeByteCount = preset.ModeCount * modeSize;
 
-        if (combined.Length < pathBytes + modeBytes)
+        if (combined.Length < pathByteCount + modeByteCount)
             return "Preset topology data is corrupt or incompatible.";
 
-        IntPtr pathPtr = Marshal.AllocHGlobal(pathBytes);
-        IntPtr modePtr = Marshal.AllocHGlobal(modeBytes);
+        byte[] pathBytes = new byte[pathByteCount];
+        byte[] modeBytes = new byte[modeByteCount];
+        Buffer.BlockCopy(combined, 0, pathBytes, 0, pathByteCount);
+        Buffer.BlockCopy(combined, pathByteCount, modeBytes, 0, modeByteCount);
+
+        // Deserialize to structs so we can remap LUIDs before applying.
+        // Adapter LUIDs are reassigned by Windows on every boot; without remapping,
+        // SetDisplayConfig returns error 87 after a restart.
+        var paths = ParseStructArray<CcdNative.DISPLAYCONFIG_PATH_INFO>(pathBytes, preset.PathCount);
+        var modes = ParseStructArray<CcdNative.DISPLAYCONFIG_MODE_INFO>(modeBytes, preset.ModeCount);
+
+        RemapLuids(paths, modes);
+
+        IntPtr pathPtr = StructsToHGlobal(paths, pathSize);
+        IntPtr modePtr = StructsToHGlobal(modes, modeSize);
         try
         {
-            Marshal.Copy(combined, 0, pathPtr, pathBytes);
-            Marshal.Copy(combined, pathBytes, modePtr, modeBytes);
-
-            // SDC_SAVE_TO_DATABASE omitted: combining with SDC_ALLOW_CHANGES can cause
-            // error 87 on some drivers. The OS persists the active config automatically.
             uint applyFlags = CcdNative.SDC_APPLY
                             | CcdNative.SDC_USE_SUPPLIED_DISPLAY_CONFIG
                             | CcdNative.SDC_ALLOW_CHANGES;
 
             int result = CcdNative.SetDisplayConfig(
-                (uint)preset.PathCount, pathPtr,
-                (uint)preset.ModeCount, modePtr,
+                (uint)paths.Length, pathPtr,
+                (uint)modes.Length, modePtr,
                 applyFlags);
 
             if (result != CcdNative.ERROR_SUCCESS)
@@ -73,6 +81,73 @@ public class DisplayService
         {
             Marshal.FreeHGlobal(pathPtr);
             Marshal.FreeHGlobal(modePtr);
+        }
+    }
+
+    /// <summary>
+    /// Remaps stored adapter LUIDs to the current boot's LUIDs.
+    /// Matches by (outputTechnology, targetId) which is stable across reboots.
+    /// </summary>
+    private void RemapLuids(
+        CcdNative.DISPLAYCONFIG_PATH_INFO[] paths,
+        CcdNative.DISPLAYCONFIG_MODE_INFO[] modes)
+    {
+        try
+        {
+            var (pathBytes, _, pathCount, _) = QueryConfigRaw(CcdNative.QDC_ALL_PATHS);
+            var currentPaths = ParseStructArray<CcdNative.DISPLAYCONFIG_PATH_INFO>(pathBytes, pathCount);
+
+            // Build: (outputTechnology, targetId) → current adapter LUID
+            var targetToLuid = new Dictionary<(uint tech, uint id), CcdNative.LUID>();
+            foreach (var p in currentPaths)
+            {
+                var key = (p.targetInfo.outputTechnology, p.targetInfo.id);
+                if (!targetToLuid.ContainsKey(key))
+                    targetToLuid[key] = p.targetInfo.adapterId;
+            }
+
+            // Build: stored adapter LUID → current adapter LUID
+            var luidRemap = new Dictionary<(uint low, int high), CcdNative.LUID>();
+            foreach (var p in paths)
+            {
+                var key = (p.targetInfo.outputTechnology, p.targetInfo.id);
+                if (targetToLuid.TryGetValue(key, out var current))
+                {
+                    var storedKey = (p.targetInfo.adapterId.LowPart, p.targetInfo.adapterId.HighPart);
+                    luidRemap.TryAdd(storedKey, current);
+                }
+            }
+
+            if (luidRemap.Count == 0) return;
+
+            // Patch paths
+            for (int i = 0; i < paths.Length; i++)
+            {
+                var path = paths[i];
+                var tKey = (path.targetInfo.adapterId.LowPart, path.targetInfo.adapterId.HighPart);
+                if (luidRemap.TryGetValue(tKey, out var newLuid))
+                {
+                    var src = path.sourceInfo; src.adapterId = newLuid; path.sourceInfo = src;
+                    var tgt = path.targetInfo; tgt.adapterId = newLuid; path.targetInfo = tgt;
+                    paths[i] = path;
+                }
+            }
+
+            // Patch modes
+            for (int i = 0; i < modes.Length; i++)
+            {
+                var mode = modes[i];
+                var mKey = (mode.adapterId.LowPart, mode.adapterId.HighPart);
+                if (luidRemap.TryGetValue(mKey, out var newLuid))
+                {
+                    mode.adapterId = newLuid;
+                    modes[i] = mode;
+                }
+            }
+        }
+        catch
+        {
+            // Best-effort — fall through and let SDC_ALLOW_CHANGES handle it
         }
     }
 
@@ -212,6 +287,14 @@ public class DisplayService
             Marshal.FreeHGlobal(pathPtr);
             Marshal.FreeHGlobal(modePtr);
         }
+    }
+
+    private static IntPtr StructsToHGlobal<T>(T[] structs, int structSize) where T : struct
+    {
+        IntPtr ptr = Marshal.AllocHGlobal(structs.Length * structSize);
+        for (int i = 0; i < structs.Length; i++)
+            Marshal.StructureToPtr(structs[i], ptr + i * structSize, false);
+        return ptr;
     }
 
     private static T[] ParseStructArray<T>(byte[] bytes, int count) where T : struct

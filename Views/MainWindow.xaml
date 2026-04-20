@@ -205,25 +205,29 @@
                                 HorizontalAlignment="Left"
                                 Margin="0,0,0,16"/>
 
-                        <!-- Action buttons -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Apply Now"
-                                    Style="{StaticResource PrimaryButton}"
-                                    Command="{Binding DataContext.ApplyPresetCommand,
-                                        RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}"/>
-                        </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
         </Grid>
 
-        <!-- Startup toggle -->
-        <CheckBox Grid.Row="2"
-                  Content="Launch VirtuaSwitcher at Windows startup"
-                  IsChecked="{Binding LaunchOnStartup}"
-                  Margin="0,12,0,0"
-                  FontSize="13"/>
+        <!-- Bottom bar: startup toggle + Apply Now -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox Grid.Column="0"
+                      Content="Launch VirtuaSwitcher at Windows startup"
+                      IsChecked="{Binding LaunchOnStartup}"
+                      VerticalAlignment="Center"
+                      FontSize="13"/>
+            <Button Grid.Column="1"
+                    Content="Apply Now"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding ApplyPresetCommand}"
+                    CommandParameter="{Binding SelectedPreset}"
+                    IsEnabled="{Binding SelectedPreset, Converter={StaticResource NotNullToBoolConverter}}"/>
+        </Grid>
 
         <!-- Status bar -->
         <TextBlock Grid.Row="3"
