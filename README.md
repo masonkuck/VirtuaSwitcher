@@ -1,5 +1,7 @@
 # VirtuaSwitcher
 
+![VirtuaSwitcher](Resources/icon.png)
+
 A lightweight Windows system tray application for switching between display configuration presets — designed for setups where you regularly switch between multiple monitor arrangements (e.g., a desktop workstation and a TV).
 
 [![Release](https://github.com/masonkuck/VirtuaSwitcher/actions/workflows/release.yml/badge.svg)](https://github.com/masonkuck/VirtuaSwitcher/actions/workflows/release.yml)

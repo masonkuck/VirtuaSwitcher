@@ -173,21 +173,21 @@ public partial class App : System.Windows.Application
             tipIcon: WinForms.ToolTipIcon.Info);
     }
 
-    // -------------------------------------------------------------------------
-    // Placeholder icon (blue square with white "VS" text)
-    // -------------------------------------------------------------------------
-
     private static Icon CreatePlaceholderIcon()
     {
-        using var bmp = new Bitmap(32, 32);
-        using var g = Graphics.FromImage(bmp);
+        var uri = new Uri("pack://application:,,,/Resources/icon.png");
+        var stream = System.Windows.Application.GetResourceStream(uri)?.Stream;
+        if (stream is not null)
+        {
+            using var bmp = new Bitmap(stream);
+            var hicon = bmp.GetHicon();
+            return Icon.FromHandle(hicon);
+        }
+
+        // Fallback if resource is missing
+        using var fallback = new Bitmap(32, 32);
+        using var g = Graphics.FromImage(fallback);
         g.Clear(System.Drawing.Color.FromArgb(26, 115, 232));
-
-        using var font = new Font("Segoe UI", 10, System.Drawing.FontStyle.Bold, GraphicsUnit.Pixel);
-        using var brush = new SolidBrush(System.Drawing.Color.White);
-        g.DrawString("VS", font, brush, 4, 8);
-
-        var hicon = bmp.GetHicon();
-        return Icon.FromHandle(hicon);
+        return Icon.FromHandle(fallback.GetHicon());
     }
 }
