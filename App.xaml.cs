@@ -67,11 +67,11 @@ public partial class App : System.Windows.Application
 
         // Wire hotkey trigger → apply preset
         var hotkeyService = _host.Services.GetRequiredService<HotkeyService>();
-        hotkeyService.HotkeyTriggered += (_, presetId) =>
+        hotkeyService.HotkeyTriggered += async (_, presetId) =>
         {
-            Dispatcher.Invoke(() =>
+            await Dispatcher.InvokeAsync(async () =>
             {
-                _mainViewModel.ApplyPresetById(presetId);
+                await _mainViewModel.ApplyPresetByIdAsync(presetId);
                 ShowBalloon(_mainViewModel.StatusMessage ?? "Preset applied.");
             });
         };
@@ -132,9 +132,9 @@ public partial class App : System.Windows.Application
         {
             var presetCopy = preset; // capture for closure
             var item = new WinForms.ToolStripMenuItem(preset.Name);
-            item.Click += (_, _) =>
+            item.Click += async (_, _) =>
             {
-                _mainViewModel.ApplyPreset(presetCopy);
+                await _mainViewModel.ApplyPresetAsync(presetCopy);
                 ShowBalloon(_mainViewModel.StatusMessage ?? "Preset applied.");
             };
             menu.Items.Add(item);

@@ -74,7 +74,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void ApplyPreset(PresetViewModel? vm)
+    public async Task ApplyPresetAsync(PresetViewModel? vm)
     {
         vm ??= SelectedPreset;
         if (vm is null) return;
@@ -83,16 +83,20 @@ public partial class MainViewModel : ObservableObject
         var error = _displayService.ApplyPreset(model);
 
         if (error is null && model.AudioDeviceId is not null)
+        {
+            // Wait for Windows to bring the display online and register its audio endpoint
+            await Task.Delay(1500);
             error = _audioService.SetDefaultPlaybackDevice(model.AudioDeviceId);
+        }
 
         StatusMessage = error ?? $"Applied preset \"{vm.Name}\".";
     }
 
-    public void ApplyPresetById(Guid id)
+    public async Task ApplyPresetByIdAsync(Guid id)
     {
         var vm = Presets.FirstOrDefault(p => p.Id == id);
         if (vm is not null)
-            ApplyPreset(vm);
+            await ApplyPresetAsync(vm);
     }
 
     public void SavePreset(PresetViewModel vm)
