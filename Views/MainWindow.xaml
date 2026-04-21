@@ -180,14 +180,25 @@
 
                         <!-- Audio output -->
                         <TextBlock Text="Audio Output" Style="{StaticResource FieldLabel}"/>
-                        <ComboBox ItemsSource="{Binding AudioDevices}"
-                                  SelectedItem="{Binding SelectedAudioDevice}"
-                                  DisplayMemberPath="Name"
-                                  FontSize="13"
-                                  Padding="8,6"
-                                  Margin="0,0,0,16"
-                                  BorderBrush="{StaticResource BorderBrush}"
-                                  BorderThickness="1"/>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0"
+                                      ItemsSource="{Binding AudioDevices}"
+                                      SelectedItem="{Binding SelectedAudioDevice}"
+                                      DisplayMemberPath="Name"
+                                      FontSize="13"
+                                      Padding="8,6"
+                                      BorderBrush="{StaticResource BorderBrush}"
+                                      BorderThickness="1"/>
+                            <Button Grid.Column="2"
+                                    Content="Clear"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Click="ClearAudio_Click"/>
+                        </Grid>
 
                         <!-- Display config -->
                         <TextBlock Text="Display Configuration" Style="{StaticResource FieldLabel}"/>
