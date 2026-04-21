@@ -5,7 +5,7 @@
 A lightweight Windows system tray application for switching between display configuration presets — designed for setups where you regularly switch between multiple monitor arrangements (e.g., a desktop workstation and a TV).
 
 [![Release](https://github.com/masonkuck/VirtuaSwitcher/actions/workflows/release.yml/badge.svg)](https://github.com/masonkuck/VirtuaSwitcher/actions/workflows/release.yml)
-
+[![Pre-Release](https://github.com/masonkuck/VirtuaSwitcher/actions/workflows/prerelease.yml/badge.svg)](https://github.com/masonkuck/VirtuaSwitcher/actions/workflows/prerelease.yml)
 ## Features
 
 - **Display presets**: capture and name any display configuration, including active monitors, resolution, refresh rate, and layout
