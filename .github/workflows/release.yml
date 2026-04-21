@@ -47,3 +47,4 @@ jobs:
             publish/win-x64/VirtuaSwitcher-x64.exe
             publish/win-x86/VirtuaSwitcher-x86.exe
           generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
