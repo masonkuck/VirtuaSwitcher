@@ -12,7 +12,7 @@ A lightweight Windows system tray application for switching between display conf
 
 ## Requirements
 
-- Windows 10 or 11 (x64)
+- Windows 10 or 11 (x64 or x86)
 - No additional runtime required (self-contained build)
 
 ## Installation
@@ -41,6 +41,17 @@ Changes save automatically.
 - **Tray menu**: right-click the tray icon and click a preset name
 - **Settings window**: select a preset and click **Apply Now**
 
+## Releases
+
+Releases are built automatically via GitHub Actions when a version tag is pushed. Both `win-x64` and `win-x86` executables are attached to each release.
+
+To cut a release:
+
+```powershell
+git tag v1.2.3
+git push origin v1.2.3
+```
+
 ## Building from Source
 
 **.NET 10 SDK** is required.
@@ -51,11 +62,11 @@ git clone https://github.com/masonkuck/VirtuaSwitcher.git
 cd VirtuaSwitcher
 dotnet build
 
-# Publish a self-contained single-file executable
+# Publish self-contained single-file executables (win-x64 and win-x86)
 .\publish.ps1
 ```
 
-Output is written to `./publish/VirtuaSwitcher.exe`.
+Output is written to `./publish/win-x64/VirtuaSwitcher.exe` and `./publish/win-x86/VirtuaSwitcher.exe`.
 
 ## What Gets Captured
 
