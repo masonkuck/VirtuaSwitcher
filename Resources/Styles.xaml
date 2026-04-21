@@ -8,6 +8,7 @@
     <conv:BoolToVisibilityConverter          x:Key="BoolToVisibilityConverter"/>
     <conv:InverseBoolToVisibilityConverter   x:Key="InverseBoolToVisibilityConverter"/>
     <conv:HotkeyToStringConverter            x:Key="HotkeyToStringConverter"/>
+    <conv:NotNullToBoolConverter             x:Key="NotNullToBoolConverter"/>
 
     <!-- Colors -->
     <Color x:Key="PrimaryColor">#1A73E8</Color>
