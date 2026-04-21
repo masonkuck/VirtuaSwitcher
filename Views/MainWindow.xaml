@@ -134,10 +134,12 @@
                                Visibility="{Binding SelectedPreset, Converter={StaticResource NullToVisibilityConverter}}"/>
 
                     <!-- Detail content (visible when preset selected) -->
-                    <StackPanel DataContext="{Binding SelectedPreset}"
-                                Visibility="{Binding DataContext.SelectedPreset,
-                                    RelativeSource={RelativeSource AncestorType=Window},
-                                    Converter={StaticResource NotNullToVisibilityConverter}}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Visibility="{Binding DataContext.SelectedPreset,
+                                      RelativeSource={RelativeSource AncestorType=Window},
+                                      Converter={StaticResource NotNullToVisibilityConverter}}">
+                    <StackPanel DataContext="{Binding SelectedPreset}">
 
                         <!-- Name -->
                         <TextBlock Text="Preset Name" Style="{StaticResource FieldLabel}"/>
@@ -217,6 +219,7 @@
                                 Margin="0,0,0,16"/>
 
                     </StackPanel>
+                    </ScrollViewer>
                 </Grid>
             </Border>
         </Grid>
