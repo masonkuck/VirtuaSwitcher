@@ -25,6 +25,8 @@ A lightweight Windows system tray application for switching between display conf
 2. Place it in a permanent location (e.g. `%LOCALAPPDATA%\VirtuaSwitcher\`)
 3. Run it — the icon will appear in the system tray
 
+> **Note on Windows SmartScreen:** The executable is currently unsigned. Windows may show a "Windows protected your PC" warning on first run — click **More info → Run anyway** to proceed. Code signing requires an established download reputation, which this project is still building. If sufficient users have downloaded and run the app, SmartScreen will stop warning automatically. If I am able to, I will set up signing eventually. This requires a reputation that this project does not have currently.
+
 > **Note:** Place the exe in its final location before enabling "Launch on startup." The startup registry entry is written to wherever the exe currently lives.
 
 ## Usage
