@@ -34,6 +34,10 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        // Splash screen
+        var splash = new SplashWindow();
+        splash.Show();
+
         // DI host
         _host = Host.CreateDefaultBuilder()
             .ConfigureServices(services =>
@@ -81,6 +85,8 @@ public partial class App : System.Windows.Application
         // Keep window hidden but ensure it gets an HWND so hotkeys work
         _mainWindow.Show();
         _mainWindow.Hide();
+
+        splash.CloseWithFade();
     }
 
     protected override async void OnExit(ExitEventArgs e)
