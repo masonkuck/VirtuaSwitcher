@@ -34,12 +34,17 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        // Splash screen
+        var splash = new SplashWindow();
+        splash.Show();
+
         // DI host
         _host = Host.CreateDefaultBuilder()
             .ConfigureServices(services =>
             {
                 services.AddSingleton<SettingsService>();
                 services.AddSingleton<DisplayService>();
+                services.AddSingleton<AudioService>();
                 services.AddSingleton<StartupService>();
                 services.AddSingleton<HotkeyService>();
                 services.AddSingleton<MainViewModel>();
@@ -62,11 +67,11 @@ public partial class App : System.Windows.Application
 
         // Wire hotkey trigger → apply preset
         var hotkeyService = _host.Services.GetRequiredService<HotkeyService>();
-        hotkeyService.HotkeyTriggered += (_, presetId) =>
+        hotkeyService.HotkeyTriggered += async (_, presetId) =>
         {
-            Dispatcher.Invoke(() =>
+            await Dispatcher.InvokeAsync(async () =>
             {
-                _mainViewModel.ApplyPresetById(presetId);
+                await _mainViewModel.ApplyPresetByIdAsync(presetId);
                 ShowBalloon(_mainViewModel.StatusMessage ?? "Preset applied.");
             });
         };
@@ -80,6 +85,8 @@ public partial class App : System.Windows.Application
         // Keep window hidden but ensure it gets an HWND so hotkeys work
         _mainWindow.Show();
         _mainWindow.Hide();
+
+        splash.CloseWithFade();
     }
 
     protected override async void OnExit(ExitEventArgs e)
@@ -125,9 +132,9 @@ public partial class App : System.Windows.Application
         {
             var presetCopy = preset; // capture for closure
             var item = new WinForms.ToolStripMenuItem(preset.Name);
-            item.Click += (_, _) =>
+            item.Click += async (_, _) =>
             {
-                _mainViewModel.ApplyPreset(presetCopy);
+                await _mainViewModel.ApplyPresetAsync(presetCopy);
                 ShowBalloon(_mainViewModel.StatusMessage ?? "Preset applied.");
             };
             menu.Items.Add(item);
@@ -166,21 +173,21 @@ public partial class App : System.Windows.Application
             tipIcon: WinForms.ToolTipIcon.Info);
     }
 
-    // -------------------------------------------------------------------------
-    // Placeholder icon (blue square with white "VS" text)
-    // -------------------------------------------------------------------------
-
     private static Icon CreatePlaceholderIcon()
     {
-        using var bmp = new Bitmap(32, 32);
-        using var g = Graphics.FromImage(bmp);
+        var uri = new Uri("pack://application:,,,/Resources/icon.png");
+        var stream = System.Windows.Application.GetResourceStream(uri)?.Stream;
+        if (stream is not null)
+        {
+            using var bmp = new Bitmap(stream);
+            var hicon = bmp.GetHicon();
+            return Icon.FromHandle(hicon);
+        }
+
+        // Fallback if resource is missing
+        using var fallback = new Bitmap(32, 32);
+        using var g = Graphics.FromImage(fallback);
         g.Clear(System.Drawing.Color.FromArgb(26, 115, 232));
-
-        using var font = new Font("Segoe UI", 10, System.Drawing.FontStyle.Bold, GraphicsUnit.Pixel);
-        using var brush = new SolidBrush(System.Drawing.Color.White);
-        g.DrawString("VS", font, brush, 4, 8);
-
-        var hicon = bmp.GetHicon();
-        return Icon.FromHandle(hicon);
+        return Icon.FromHandle(fallback.GetHicon());
     }
 }

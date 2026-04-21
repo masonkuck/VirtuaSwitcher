@@ -15,12 +15,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AudioSwitcher.AudioApi.CoreAudio" Version="3.0.3" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Resources\icon_active.ico" />
+    <Resource Include="Resources\icon.png" />
   </ItemGroup>
 
 </Project>

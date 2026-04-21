@@ -1,5 +1,7 @@
 # VirtuaSwitcher
 
+![VirtuaSwitcher](Resources/icon.png)
+
 A lightweight Windows system tray application for switching between display configuration presets — designed for setups where you regularly switch between multiple monitor arrangements (e.g., a desktop workstation and a TV).
 
 [![Release](https://github.com/masonkuck/VirtuaSwitcher/actions/workflows/release.yml/badge.svg)](https://github.com/masonkuck/VirtuaSwitcher/actions/workflows/release.yml)
@@ -91,3 +93,4 @@ Each preset stores a snapshot of the active display topology via the Windows CCD
 - [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)
 - [Microsoft.Extensions.Hosting](https://learn.microsoft.com/en-us/dotnet/core/extensions/generic-host) (dependency injection)
 - Windows CCD API via P/Invoke
+- [AudioSwitcher.AudioApi.CoreAudio](https://github.com/xenolightning/AudioSwitcher) (audio device switching)

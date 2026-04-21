@@ -29,4 +29,10 @@ public class DisplayPreset
     public List<string> DisplaySummaries { get; set; } = [];
 
     public bool HasTopology => !string.IsNullOrEmpty(TopologyBlob);
+
+    /// <summary>Device ID of the audio output to activate when applying this preset.</summary>
+    public string? AudioDeviceId { get; set; }
+
+    /// <summary>Friendly name of the audio device, stored for display purposes only.</summary>
+    public string? AudioDeviceName { get; set; }
 }

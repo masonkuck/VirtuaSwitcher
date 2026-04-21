@@ -104,4 +104,13 @@ public partial class MainWindow : Window
             mainVm.SavePreset(preset);
         }
     }
+
+    private void ClearAudio_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel mainVm && mainVm.SelectedPreset is { } preset)
+        {
+            preset.SelectedAudioDevice = null;
+            mainVm.SavePreset(preset);
+        }
+    }
 }

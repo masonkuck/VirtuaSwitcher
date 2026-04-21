@@ -1,9 +1,9 @@
-name: Release
+name: Pre-Release
 
 on:
   push:
     tags:
-      - 'v[0-9]*.[0-9]*.[0-9]*'
+      - 'v*-*'
 
 permissions:
   contents: write
@@ -40,10 +40,11 @@ jobs:
           Rename-Item publish/win-x64/VirtuaSwitcher.exe VirtuaSwitcher-x64.exe
           Rename-Item publish/win-x86/VirtuaSwitcher.exe VirtuaSwitcher-x86.exe
 
-      - name: Create GitHub Release
+      - name: Create GitHub Pre-Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             publish/win-x64/VirtuaSwitcher-x64.exe
             publish/win-x86/VirtuaSwitcher-x86.exe
           generate_release_notes: true
+          prerelease: true
