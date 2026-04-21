@@ -175,6 +175,17 @@
                                     Click="ClearHotkey_Click"/>
                         </Grid>
 
+                        <!-- Audio output -->
+                        <TextBlock Text="Audio Output" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox ItemsSource="{Binding AudioDevices}"
+                                  SelectedItem="{Binding SelectedAudioDevice}"
+                                  DisplayMemberPath="Name"
+                                  FontSize="13"
+                                  Padding="8,6"
+                                  Margin="0,0,0,16"
+                                  BorderBrush="{StaticResource BorderBrush}"
+                                  BorderThickness="1"/>
+
                         <!-- Display config -->
                         <TextBlock Text="Display Configuration" Style="{StaticResource FieldLabel}"/>
                         <Border Style="{StaticResource Card}"

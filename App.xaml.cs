@@ -40,6 +40,7 @@ public partial class App : System.Windows.Application
             {
                 services.AddSingleton<SettingsService>();
                 services.AddSingleton<DisplayService>();
+                services.AddSingleton<AudioService>();
                 services.AddSingleton<StartupService>();
                 services.AddSingleton<HotkeyService>();
                 services.AddSingleton<MainViewModel>();

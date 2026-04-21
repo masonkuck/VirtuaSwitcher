@@ -9,6 +9,7 @@ namespace VirtuaSwitcher.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly DisplayService _displayService;
+    private readonly AudioService _audioService;
     private readonly SettingsService _settingsService;
     private readonly StartupService _startupService;
     private readonly HotkeyService _hotkeyService;
@@ -28,18 +29,20 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel(
         DisplayService displayService,
+        AudioService audioService,
         SettingsService settingsService,
         StartupService startupService,
         HotkeyService hotkeyService)
     {
         _displayService = displayService;
+        _audioService = audioService;
         _settingsService = settingsService;
         _startupService = startupService;
         _hotkeyService = hotkeyService;
 
         var settings = _settingsService.Load();
         foreach (var preset in settings.Presets)
-            Presets.Add(WirePreset(new PresetViewModel(preset, _displayService)));
+            Presets.Add(WirePreset(new PresetViewModel(preset, _displayService, _audioService)));
 
         LaunchOnStartup = _startupService.IsEnabled();
     }
@@ -48,7 +51,7 @@ public partial class MainViewModel : ObservableObject
     public void AddPreset()
     {
         var preset = new DisplayPreset { Name = "New Preset" };
-        var vm = WirePreset(new PresetViewModel(preset, _displayService));
+        var vm = WirePreset(new PresetViewModel(preset, _displayService, _audioService));
         Presets.Add(vm);
         SelectedPreset = vm;
         Save();
@@ -76,7 +79,12 @@ public partial class MainViewModel : ObservableObject
         vm ??= SelectedPreset;
         if (vm is null) return;
 
-        var error = _displayService.ApplyPreset(vm.GetModel());
+        var model = vm.GetModel();
+        var error = _displayService.ApplyPreset(model);
+
+        if (error is null && model.AudioDeviceId is not null)
+            error = _audioService.SetDefaultPlaybackDevice(model.AudioDeviceId);
+
         StatusMessage = error ?? $"Applied preset \"{vm.Name}\".";
     }
 
